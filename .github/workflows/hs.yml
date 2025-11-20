@@ -1,0 +1,16 @@
+name: Happy Sunday
+on:
+  schedule:
+    - cron: '0 17 * * 0' 
+  workflow_dispatch:
+jobs:
+  keep-alive:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Notify
+        run: |
+            curl -X POST "https://bfriljqgqvmfeksdfcvx.functions.supabase.co/happysunday" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{}'

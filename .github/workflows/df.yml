@@ -1,0 +1,20 @@
+name: DailyFive
+on:
+  schedule:
+    - cron: '0 20 * * 1-6' 
+  workflow_dispatch:
+jobs:
+  keep-alive:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Notify
+        run: |
+            curl -X POST "https://bfriljqgqvmfeksdfcvx.functions.supabase.co/dailyfive" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{}'
+
+
+
+

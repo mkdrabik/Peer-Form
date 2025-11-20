@@ -1,0 +1,16 @@
+name: Monday Mot
+on:
+  schedule:
+    - cron: '0 12 * * 1' 
+  workflow_dispatch:
+jobs:
+  keep-alive:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Notify
+        run: |
+            curl -X POST "https://bfriljqgqvmfeksdfcvx.functions.supabase.co/mondaymoody" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{}'
