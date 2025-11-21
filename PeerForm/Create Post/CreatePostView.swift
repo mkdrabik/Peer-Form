@@ -15,19 +15,17 @@ struct CreatePostView: View {
     @EnvironmentObject var supabaseManager: SupabaseManager
     @StateObject private var viewModel = CreatePostViewModel()
     @State private var photoPickerItem: PhotosPickerItem?
-    @State private var uploadedImageURL: String?
 
-    
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 24) {
-                        Picker("Type", selection: $viewModel.postType) {
-                            Text("Post").tag("Post")
-                            Text("Achievement").tag("Achievement")
-                        }
-                        .pickerStyle(SegmentedPickerStyle())
-                        .padding(.horizontal)
+                    Picker("Type", selection: $viewModel.postType) {
+                        Text("Post").tag("Post")
+                        Text("Achievement").tag("Achievement")
+                    }
+                    .pickerStyle(SegmentedPickerStyle())
+                    .padding(.horizontal)
                     
                     if let image = viewModel.selectedImage {
                         ZStack(alignment: .topTrailing) {
@@ -75,17 +73,53 @@ struct CreatePostView: View {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Caption")
                             .font(.headline)
-                            .foregroundColor(.primary)
-                        
-                        TextEditor(text: $viewModel.caption)
-                            .frame(minHeight: 80, maxHeight: 160)
-                            .padding(8)
-                            .background(Color(.systemGray6))
-                            .cornerRadius(10)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 10)
-                                    .stroke(Color.gray.opacity(0.15), lineWidth: 1)
-                            )
+
+                        ZStack(alignment: .topLeading) {
+                            TextEditor(text: $viewModel.caption)
+                                .frame(minHeight: 80, maxHeight: 160)
+                                .padding(8)
+                                .background(Color(.systemGray6))
+                                .cornerRadius(10)
+                                .onChange(of: viewModel.caption) { _, _ in
+                                    viewModel.checkForMentionTrigger()
+                                }
+
+                            // --- Mentions dropdown above the text editor ---
+                            if viewModel.isMentioning && !viewModel.mentionResults.isEmpty {
+                                VStack(spacing: 0) {
+                                    ForEach(viewModel.mentionResults, id: \.id) { user in
+                                        Button {
+                                            viewModel.insertMention(user.username)
+                                        } label: {
+                                            HStack {
+                                                if let url = URL(string: user.avatar_url ?? "") {
+                                                    KFImage(url)
+                                                        .resizable()
+                                                        .scaledToFill()
+                                                        .frame(width: 32, height: 32)
+                                                        .clipShape(Circle())
+                                                }
+
+                                                Text("@\(user.username)")
+                                                    .foregroundColor(.blue)
+                                                    .font(.body)
+
+                                                Spacer()
+                                            }
+                                            .padding(.vertical, 6)
+                                            .padding(.horizontal, 8)
+                                        }
+                                        .background(Color(.systemBackground))
+                                        .hoverEffect(.highlight)
+                                    }
+                                }
+                                .frame(maxHeight: 180)
+                                .background(.ultraThinMaterial)
+                                .cornerRadius(12)
+                                .shadow(radius: 3)
+                                .offset(y: -180)
+                            }
+                        }
                     }
                     .padding(.horizontal)
                     
@@ -117,9 +151,7 @@ struct CreatePostView: View {
                     Spacer(minLength: 40)
                 }
                 .padding()
-                .onTapGesture {
-                    dismissKeyboard()
-                }
+                .onTapGesture { dismissKeyboard() }
             }
             .navigationTitle("Share")
             .onChange(of: photoPickerItem) { _, newItem in
@@ -129,15 +161,13 @@ struct CreatePostView: View {
                 viewModel.alertMessage ?? "Post Created!",
                 isPresented: $viewModel.showAlert
             ) {
-                Button("OK", role: .cancel) {
-                    viewModel.alertMessage = nil
-                }
+                Button("OK", role: .cancel) { viewModel.alertMessage = nil }
             } message: {
                 if let _ = viewModel.alertMessage {
                     Text("Please upload a vertical photo.")
                 }
             }
-
+            .task { await viewModel.loadUsersForMentions(supabaseManager: supabaseManager) }
         }
     }
     
@@ -146,23 +176,24 @@ struct CreatePostView: View {
         if let data = try? await item.loadTransferable(type: Data.self),
            let image = UIImage(data: data) {
             if image.size.width > image.size.height {
-                        await MainActor.run {
-                            viewModel.selectedImage = nil
-                            viewModel.showAlert = true
-                            viewModel.alertMessage = "Error: Vertical pictures only."
-                            viewModel.caption = ""
-                        }
-                        return
-                    }
+                await MainActor.run {
+                    viewModel.selectedImage = nil
+                    viewModel.showAlert = true
+                    viewModel.alertMessage = "Error: Vertical pictures only."
+                    viewModel.caption = ""
+                }
+                return
+            }
             await MainActor.run { viewModel.selectedImage = image }
         }
     }
-    
+
     func dismissKeyboard() {
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder),
                                         to: nil, from: nil, for: nil)
     }
 }
+
 
 #Preview {
     CreatePostView()

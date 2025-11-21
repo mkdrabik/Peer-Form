@@ -8,34 +8,6 @@ import Foundation
 import Combine
 import Supabase
 
-//@MainActor
-//class FriendsViewModel: ObservableObject {
-//    @Published var searchQuery: String = ""
-//    @Published var searchResults: [Profile] = []
-//    @Published var isLoading = false
-//    
-//    
-//    func searchUsers(supabaseManager: SupabaseManager) async {
-//        guard !searchQuery.isEmpty else { return }
-//        isLoading = true
-//        do {
-//            let response = try await supabaseManager.client
-//                .from("profiles")
-//                .select()
-//                .ilike("username", pattern: "%\(searchQuery)%")
-//                .neq("username", value: supabaseManager.profile?.username ?? "")
-//                .execute()
-//            
-//            let data = response.data
-//            let profiles = try JSONDecoder().decode([Profile].self, from: data)
-//            self.searchResults = profiles
-//            
-//        } catch {
-//            print("Error searching users: \(error)")
-//        }
-//        isLoading = false
-//    }
-//}
 
 @MainActor
 class FriendsViewModel: ObservableObject {
