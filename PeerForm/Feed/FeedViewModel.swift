@@ -52,6 +52,7 @@ final class FeedViewModel: ObservableObject {
                 """)
                 .eq("type", value: "post")
                 .order("created_at", ascending: false)
+                .limit(20)
                 .execute()
 
             var fetchedPosts = try JSONDecoder().decode([Post].self, from: response.data)

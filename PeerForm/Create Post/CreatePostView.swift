@@ -19,14 +19,66 @@ struct CreatePostView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: 24) {
+                VStack(spacing: 16) {
+                    VStack(alignment: .leading, spacing: 0) {
+                        Text("Caption")
+                            .font(.headline)
+                            .padding(.horizontal)
+                            .padding(.bottom, 10)
+
+                        TextEditor(text: $viewModel.caption)
+                            .frame(minHeight: 80, maxHeight: 160)
+                            .padding(8)
+                            .background(Color(.systemGray6))
+                            .cornerRadius(10)
+                            .padding(.horizontal)
+                            .onChange(of: viewModel.caption) { _, _ in
+                                viewModel.checkForMentionTrigger()
+                            }
+
+                        if viewModel.isMentioning && !viewModel.mentionResults.isEmpty {
+                            ScrollView {
+                                VStack(alignment: .leading, spacing: 0) {
+                                    ForEach(viewModel.mentionResults, id: \.id) { user in
+                                        Button {
+                                            viewModel.insertMention(user.username)
+                                        } label: {
+                                            HStack(spacing: 12) {
+                                                if let url = URL(string: user.avatar_url ?? "") {
+                                                    KFImage(url)
+                                                        .resizable()
+                                                        .scaledToFill()
+                                                        .frame(width: 40, height: 40)
+                                                        .clipShape(Circle())
+                                                }
+                                                Text("@\(user.username)")
+                                                    .foregroundColor(.primary)
+                                                    .font(.body)
+                                                Spacer()
+                                            }
+                                            .padding(.horizontal)
+                                            .padding(.vertical, 8)
+                                        }
+                                        Divider()
+                                    }
+                                }
+                                .background(.ultraThinMaterial)
+                                .cornerRadius(12)
+                                .shadow(radius: 3)
+                                .padding(.horizontal)
+                            }
+                            .frame(maxHeight: 220)
+                        }
+
+                    }
+
                     Picker("Type", selection: $viewModel.postType) {
                         Text("Post").tag("Post")
                         Text("Achievement").tag("Achievement")
                     }
                     .pickerStyle(SegmentedPickerStyle())
                     .padding(.horizontal)
-                    
+
                     if let image = viewModel.selectedImage {
                         ZStack(alignment: .topTrailing) {
                             Image(uiImage: image)
@@ -65,64 +117,12 @@ struct CreatePostView: View {
                                 RoundedRectangle(cornerRadius: 16)
                                     .stroke(Color.gray.opacity(0.2), lineWidth: 1)
                             )
+                            .padding(.horizontal)
                         }
                     }
-                    
+
                     CameraView(cpvm: viewModel)
-                    
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Caption")
-                            .font(.headline)
 
-                        ZStack(alignment: .topLeading) {
-                            TextEditor(text: $viewModel.caption)
-                                .frame(minHeight: 80, maxHeight: 160)
-                                .padding(8)
-                                .background(Color(.systemGray6))
-                                .cornerRadius(10)
-                                .onChange(of: viewModel.caption) { _, _ in
-                                    viewModel.checkForMentionTrigger()
-                                }
-
-                            // --- Mentions dropdown above the text editor ---
-                            if viewModel.isMentioning && !viewModel.mentionResults.isEmpty {
-                                VStack(spacing: 0) {
-                                    ForEach(viewModel.mentionResults, id: \.id) { user in
-                                        Button {
-                                            viewModel.insertMention(user.username)
-                                        } label: {
-                                            HStack {
-                                                if let url = URL(string: user.avatar_url ?? "") {
-                                                    KFImage(url)
-                                                        .resizable()
-                                                        .scaledToFill()
-                                                        .frame(width: 32, height: 32)
-                                                        .clipShape(Circle())
-                                                }
-
-                                                Text("@\(user.username)")
-                                                    .foregroundColor(.blue)
-                                                    .font(.body)
-
-                                                Spacer()
-                                            }
-                                            .padding(.vertical, 6)
-                                            .padding(.horizontal, 8)
-                                        }
-                                        .background(Color(.systemBackground))
-                                        .hoverEffect(.highlight)
-                                    }
-                                }
-                                .frame(maxHeight: 180)
-                                .background(.ultraThinMaterial)
-                                .cornerRadius(12)
-                                .shadow(radius: 3)
-                                .offset(y: -180)
-                            }
-                        }
-                    }
-                    .padding(.horizontal)
-                    
                     Button {
                         Task {
                             await viewModel.uploadAndCreatePost(supabaseManager: supabaseManager)
@@ -140,23 +140,29 @@ struct CreatePostView: View {
                         .fontWeight(.semibold)
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(viewModel.isUploading || viewModel.isPosting ? Color.gray : Color.blue)
+                        .background(viewModel.isUploading || viewModel.isPosting ? Color.gray : Color.green)
                         .foregroundColor(.white)
                         .cornerRadius(12)
                         .shadow(radius: 3)
                     }
                     .disabled(viewModel.isUploading || viewModel.isPosting)
                     .padding(.horizontal)
-                    
+
                     Spacer(minLength: 40)
                 }
-                .padding()
+                .padding(.top)
                 .onTapGesture { dismissKeyboard() }
             }
             .navigationTitle("Share")
             .onChange(of: photoPickerItem) { _, newItem in
                 Task { await loadImage(from: newItem) }
             }
+            .onChange(of: viewModel.caption) { _, _ in
+                if !viewModel.mentionResults.isEmpty {
+                    viewModel.checkForMentionTrigger()
+                }
+            }
+
             .alert(
                 viewModel.alertMessage ?? "Post Created!",
                 isPresented: $viewModel.showAlert
@@ -169,8 +175,9 @@ struct CreatePostView: View {
             }
             .task { await viewModel.loadUsersForMentions(supabaseManager: supabaseManager) }
         }
+        
     }
-    
+
     func loadImage(from item: PhotosPickerItem?) async {
         guard let item else { return }
         if let data = try? await item.loadTransferable(type: Data.self),
@@ -192,6 +199,7 @@ struct CreatePostView: View {
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder),
                                         to: nil, from: nil, for: nil)
     }
+
 }
 
 

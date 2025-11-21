@@ -13,18 +13,17 @@ import Combine
 @MainActor
 final class CreatePostViewModel: ObservableObject {
 
-    @Published var caption: String = ""
+    @Published var caption: String = "Workout! 💪"
     @Published var isPosting = false
     @Published var isUploading = false
     @Published var showAlert = false
     @Published var selectedImage: UIImage?
     @Published var alertMessage: String?
     @Published var postType = "Post"
-
-    // ----- Mentions -----
     @Published var isMentioning = false
     @Published var mentionQuery = ""
     @Published var mentionResults: [Profile] = []
+    @Published var mentionedUsernames: Set<String> = []
 
     var allUsers: [Profile] = []
 
@@ -41,6 +40,24 @@ final class CreatePostViewModel: ObservableObject {
         }
     }
 
+    func attributedCaption() -> AttributedString {
+        var attributed = AttributedString(caption)
+        let mentionRegex = try! NSRegularExpression(pattern: "@[a-zA-Z0-9_]+")
+        let nsString = NSString(string: caption)
+        
+        let matches = mentionRegex.matches(in: caption, range: NSRange(location: 0, length: nsString.length))
+        
+        for match in matches {
+            if let range = Range(match.range, in: caption) {
+                let mentionRange = attributed.range(of: String(caption[range]))!
+                attributed[mentionRange].foregroundColor = .blue
+                attributed[mentionRange].font = .body.bold()
+            }
+        }
+        
+        return attributed
+    }
+
     func checkForMentionTrigger() {
         let words = caption.split(separator: " ")
         guard let last = words.last else { return }
@@ -53,6 +70,19 @@ final class CreatePostViewModel: ObservableObject {
             isMentioning = false
         }
     }
+    func insertMention(_ username: String) {
+        isMentioning = false
+        var words = caption.split(separator: " ")
+        if words.isEmpty { return }
+
+        words.removeLast()
+        words.append(Substring("@\(username)"))
+        caption = words.joined(separator: " ") + " "
+
+        mentionedUsernames.insert(username)
+        mentionResults = []
+    }
+
 
     func filterMentionResults() {
         let q = mentionQuery.lowercased()
@@ -62,18 +92,6 @@ final class CreatePostViewModel: ObservableObject {
             $0.username.lowercased().contains(q)
         }
     }
-
-    func insertMention(_ username: String) {
-        var words = caption.split(separator: " ")
-        if words.isEmpty { return }
-
-        words.removeLast()
-        words.append(Substring("@\(username)"))
-
-        caption = words.joined(separator: " ") + " "
-        isMentioning = false
-    }
-
 
     func createPost(supabaseManager: SupabaseManager, imagePath: String, type: String) async {
         guard let userId = supabaseManager.profile?.id else { return }
