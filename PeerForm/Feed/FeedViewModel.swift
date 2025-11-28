@@ -51,6 +51,7 @@ final class FeedViewModel: ObservableObject {
                     profiles ( id, username, avatar_url, first_name, last_name )
                 """)
                 .eq("type", value: "post")
+                .limit(20)
                 .order("created_at", ascending: false)
                 .execute()
 
