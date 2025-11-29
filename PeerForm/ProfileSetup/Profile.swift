@@ -6,7 +6,7 @@
 //
 import SwiftUI
 
-struct Profile: Decodable, Encodable {
+struct Profile: Decodable, Encodable, Identifiable {
     let id: UUID
     let username: String
     let first_name: String

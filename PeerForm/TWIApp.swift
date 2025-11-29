@@ -78,8 +78,7 @@ struct TWIApp: App {
             .task {
                 supabaseManager.isLoadingProfile = true
 
-                // ⏳ 1️⃣ Force LoadingView to stay visible for at least 1 second
-                let minimumDisplayTime: TimeInterval = 1.0
+                let minimumDisplayTime: TimeInterval = 1.5
                 let startTime = Date()
 
                 do {
@@ -89,7 +88,6 @@ struct TWIApp: App {
                     print("❌ Failed to load session or profile:", error)
                 }
 
-                // 2️⃣ Ensure total loading time ≥ 1s
                 let elapsed = Date().timeIntervalSince(startTime)
                 if elapsed < minimumDisplayTime {
                     try? await Task.sleep(nanoseconds: UInt64((minimumDisplayTime - elapsed) * 1_000_000_000))
@@ -97,7 +95,6 @@ struct TWIApp: App {
 
                 supabaseManager.isLoadingProfile = false
 
-                // 3️⃣ Small fade-out delay for smooth transition
                 withAnimation(.easeInOut(duration: 0.3)) {
                     showLoadingView = false
                 }
