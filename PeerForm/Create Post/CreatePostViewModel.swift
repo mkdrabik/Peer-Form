@@ -35,6 +35,13 @@ final class CreatePostViewModel: ObservableObject {
                 .execute()
 
             self.allUsers = try JSONDecoder().decode([Profile].self, from: res.data)
+                var temp = [Profile]()
+                for a in allUsers{
+                    let avatar_url = try? supabaseManager.client.storage.from("avatars").getPublicURL(path: a.avatar_url ?? "").absoluteString
+                    let newProfile = Profile(id: a.id, username: a.username, first_name: a.first_name, last_name: a.last_name, avatar_url: avatar_url)
+                    temp.append(newProfile)
+                }
+                allUsers = temp
         } catch {
             print("❌ Failed loading mention users:", error)
         }
