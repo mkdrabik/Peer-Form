@@ -20,3 +20,6 @@ Testflight: https://testflight.apple.com/join/hmnqAqg1
 <img width="200" height="400" alt="IMG_9717" src="https://github.com/user-attachments/assets/7508cd53-7674-4de4-b05e-5263f79aeb15" />
 
 <img width="200" height="400" alt="IMG_9716" src="https://github.com/user-attachments/assets/d6ed5411-b3a5-452f-9697-3876a85bf425" />
+
+<img width="200" height="400" alt="IMG_9821" src="https://github.com/user-attachments/assets/d0b2c060-60aa-4b0a-89b4-28808047ec50" />
+
