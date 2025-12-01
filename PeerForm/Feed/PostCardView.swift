@@ -15,6 +15,9 @@ struct PostCardView: View {
     @State private var selectedUser: Profile?
     @State private var isLiked: Bool
     @State private var likeCount: Int
+    @State private var showHeart = false
+    @State private var heartScale: CGFloat = 0.5
+
     
     init(post: Post) {
         self.post = post
@@ -67,6 +70,7 @@ struct PostCardView: View {
                    EmptyView()
                }
                .hidden()
+            ZStack{
                 KFImage(URL(string: post.signedImageURL?.absoluteString ?? ""))
                     .resizable()
                     .scaledToFill()
@@ -74,7 +78,24 @@ struct PostCardView: View {
                     .frame(height: 350)
                     .clipped()
                     .allowsHitTesting(false)
+                if showHeart {
+                        Image(systemName: "dumbbell.fill")
+                            .resizable()
+                            .foregroundColor(.green)
+                            .scaledToFit()
+                            .frame(width: 120)
+                            .scaleEffect(heartScale)
+                            .shadow(radius: 10)
+                            .transition(.opacity)
+                    }
+            }
             .frame(height: 350)
+            .contentShape(Rectangle())
+            .onTapGesture(count: 2) {
+                Task {
+                    await handleDoubleTapLike()
+                }
+            }
             HStack {
                 Button {
                     Task {
@@ -157,6 +178,29 @@ struct PostCardView: View {
             }
         }
     }
+    func handleDoubleTapLike() async {
+        if !isLiked {
+            await toggleLike()
+        }
+
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+            showHeart = true
+            heartScale = 1.2
+        }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            withAnimation(.spring(response: 0.3)) {
+                heartScale = 1.0
+            }
+        }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+            withAnimation(.easeOut(duration: 0.3)) {
+                showHeart = false
+            }
+        }
+    }
+
 
 }
 
