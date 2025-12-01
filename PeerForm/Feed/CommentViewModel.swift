@@ -21,6 +21,10 @@ struct Comment: Decodable, Identifiable {
 class CommentsViewModel: ObservableObject {
     @Published var comments: [Comment] = []
     @Published var newComment: String = ""
+    @Published var isMentioning = false
+    @Published var mentionQuery = ""
+    @Published var mentionResults: [Profile] = []
+    var allUsers: [Profile] = []
 
     func fetchComments(for postId: UUID, supabase: SupabaseClient) async {
         do {
@@ -76,6 +80,60 @@ class CommentsViewModel: ObservableObject {
             } catch {
                 print("❌ Error deleting comment:", error)
             }
+    }
+    
+    func loadUsersForMentions(supabaseManager: SupabaseManager) async {
+            do {
+                let res = try await supabaseManager.client
+                    .from("profiles")
+                    .select()
+                    .execute()
+                self.allUsers = try JSONDecoder().decode([Profile].self, from: res.data)
+                var temp = [Profile]()
+                for a in allUsers{
+                    let avatar_url = try? supabaseManager.client.storage.from("avatars").getPublicURL(path: a.avatar_url ?? "").absoluteString
+                    let newProfile = Profile(id: a.id, username: a.username, first_name: a.first_name, last_name: a.last_name, avatar_url: avatar_url)
+                    temp.append(newProfile)
+                }
+                allUsers = temp
+            } catch {
+                print("❌ Failed to load users:", error)
+            }
         }
+
+        func checkForMentionTrigger() {
+            let words = newComment.split(separator: " ")
+            guard let last = words.last else { return }
+
+            if last.hasPrefix("@") {
+                isMentioning = true
+                mentionQuery = String(last.dropFirst())
+                filterMentionResults()
+            } else {
+                isMentioning = false
+            }
+        }
+
+        func filterMentionResults() {
+            let q = mentionQuery.lowercased()
+            guard !q.isEmpty else { mentionResults = []; return }
+
+            mentionResults = allUsers.filter { profile in
+                profile.username.lowercased().contains(q)
+            }
+        }
+
+        func insertMention(_ username: String) {
+            isMentioning = false
+
+            var words = newComment.split(separator: " ")
+            if !words.isEmpty {
+                words.removeLast()
+            }
+
+            words.append(Substring("@\(username)"))
+            newComment = words.joined(separator: " ") + " "
+        }
+
 }
 
