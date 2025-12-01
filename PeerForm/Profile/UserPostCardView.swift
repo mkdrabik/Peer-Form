@@ -15,6 +15,10 @@ struct UserPostCardView: View {
     @EnvironmentObject var supabaseManager: SupabaseManager
     @State private var isLiked: Bool
     @State private var likeCount: Int
+    @State private var showHeart = false
+    @State private var heartScale: CGFloat = 0.5
+    
+    
     
     init(post: Post, vm: ProfileViewModel, isLiked: Bool, likeCount: Int) {
         self.post = post
@@ -22,7 +26,7 @@ struct UserPostCardView: View {
         _isLiked = State(initialValue: isLiked)
         _likeCount = State(initialValue: likeCount)
     }
-
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
@@ -47,13 +51,31 @@ struct UserPostCardView: View {
             .padding(.horizontal)
             .padding(.top, 8)
             
-            KFImage(URL(string: post.image_path))
-                .resizable()
-                .scaledToFill()
-                .frame(maxWidth: .infinity)
-                .frame(height: 350)
-                .clipped()
-                .shadow(radius: 3)
+            ZStack{
+                KFImage(URL(string: post.image_path))
+                    .resizable()
+                    .scaledToFill()
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 350)
+                    .clipped()
+                    .shadow(radius: 3)
+                if showHeart {
+                    Image(systemName: "dumbbell.fill")
+                        .resizable()
+                        .foregroundColor(.green)
+                        .scaledToFit()
+                        .frame(width: 120)
+                        .scaleEffect(heartScale)
+                        .shadow(radius: 10)
+                        .transition(.opacity)
+                }
+            }
+            .contentShape(Rectangle())
+            .onTapGesture(count: 2) {
+                Task {
+                    await handleDoubleTapLike()
+                }
+            }
             HStack {
                 Button {
                     Task {
@@ -120,7 +142,7 @@ struct UserPostCardView: View {
     func toggleLike() async {
         guard let userId = supabaseManager.profile?.id else { return }
         let client = supabaseManager.client
-
+        
         if isLiked {
             do {
                 try await client
@@ -151,5 +173,26 @@ struct UserPostCardView: View {
             }
         }
     }
-
+    func handleDoubleTapLike() async {
+        if !isLiked {
+            await toggleLike()
+        }
+        
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+            showHeart = true
+            heartScale = 1.2
+        }
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            withAnimation(.spring(response: 0.3)) {
+                heartScale = 1.0
+            }
+        }
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+            withAnimation(.easeOut(duration: 0.3)) {
+                showHeart = false
+            }
+        }
+    }
 }
