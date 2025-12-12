@@ -25,7 +25,11 @@ struct SongFeedView: View {
                     .cornerRadius(8)
 
                     VStack(alignment: .leading) {
-                        Text(song.title).font(.headline)
+                        Text(song.title)
+                            .font(.headline)
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                            .frame(maxWidth: .infinity, alignment: .leading) 
                         Text(song.artist)
                             .font(.subheadline)
                             .foregroundColor(.secondary)
