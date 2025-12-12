@@ -29,10 +29,13 @@ struct SongFeedView: View {
                             .font(.headline)
                             .lineLimit(1)
                             .truncationMode(.tail)
-                            .frame(maxWidth: .infinity, alignment: .leading) 
+                            .frame(maxWidth: .infinity, alignment: .leading)
                         Text(song.artist)
                             .font(.subheadline)
                             .foregroundColor(.secondary)
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                            .frame(maxWidth: .infinity, alignment: .leading)
                     }
                     Spacer()
                     
