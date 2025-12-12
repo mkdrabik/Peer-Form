@@ -20,6 +20,8 @@ class SongFeedViewModel: ObservableObject {
         let artist: String
         let cover_url: String
         let created_at: String
+        let spotify_url: String?
+        let apple_music_url: String?
     }
 
     func loadFeed(supabaseManager: SupabaseManager) async {
@@ -32,7 +34,9 @@ class SongFeedViewModel: ObservableObject {
                     title,
                     artist,
                     cover_url,
-                    created_at
+                    created_at, 
+                    apple_music_url,
+                    spotify_url
                 """)
                 .order("created_at", ascending: false)
                 .execute()

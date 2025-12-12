@@ -18,9 +18,6 @@ struct SongSearchView: View {
                 TextField("Search for songs...", text: $vm.query)
                     .padding()
                     .textFieldStyle(.roundedBorder)
-                    .onSubmit {
-                        Task { await vm.search() }
-                    }
                 
                 if vm.isLoading {
                     ProgressView().padding()
@@ -50,11 +47,7 @@ struct SongSearchView: View {
                         Spacer()
                         Button {
                             Task {
-                                do {
-                                    try await vm.addSongToDatabase(track, supabaseManager: supabaseManager)
-                                } catch {
-                                    print("Error adding song:", error)
-                                }
+                                await vm.addSongToDatabase(track, supabaseManager: supabaseManager)
                             }
                         } label: {
                             Image(systemName: "plus.circle.fill")
@@ -64,17 +57,17 @@ struct SongSearchView: View {
                         .buttonStyle(.plain)
                     }
                     .padding(.vertical, 4)
-                    
-                    .onTapGesture {
-                        // Add your open Spotify/Apple Music here if you want
-                        print("Tapped:", track.title)
-                    }
                 }
                 .listStyle(.plain)
             }
             .navigationTitle("Search Songs")
-            .alert("Added!", isPresented: $vm.showAddedAlert) {
+            .alert(" Song Added!", isPresented: $vm.showAddedAlert) {
                             Button("OK", role: .cancel) {}
+            }
+            .alert("Error", isPresented: $vm.showErrorAlert) {
+                Button("OK", role: .cancel) { }
+            } message: {
+                Text("Song already uploaded (I will fix this later, right now it's just one universal unique list)")
             }
         }
     }
