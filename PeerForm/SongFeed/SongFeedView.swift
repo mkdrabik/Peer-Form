@@ -65,16 +65,12 @@ struct SongFeedView: View {
             .listStyle(.plain)
             .toolbar {
                             ToolbarItem(placement: .navigationBarTrailing) {
-                                Button {
-                                    showSearch = true
-                                } label: {
+                                NavigationLink(destination: SongSearchView()) {
                                     Image(systemName: "plus")
+                                        .font(.system(size: 28))
+                                        .foregroundColor(.red)
                                 }
                             }
-                        }
-                        .navigationDestination(isPresented: $showSearch) {
-                            SongSearchView()
-                                .environmentObject(supabaseManager)
                         }
             .task {
                 await vm.loadFeed(supabaseManager: supabaseManager)
