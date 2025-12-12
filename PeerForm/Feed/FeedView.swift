@@ -68,6 +68,15 @@ struct FeedView: View {
                             .foregroundColor(.yellow)
                     }
                 }
+                ToolbarItem(placement: .navigationBarLeading) {
+                    ZStack{
+                        NavigationLink(destination: SongFeedView()) {
+                            Image(systemName: "music.note")
+                                .font(.system(size: 28))
+                                .foregroundColor(.red)
+                        }
+                    }
+                  }
             }
 
             .task {
