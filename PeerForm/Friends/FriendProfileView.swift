@@ -9,9 +9,10 @@ import Supabase
 
 struct FriendProfileView: View {
     @EnvironmentObject var supabaseManager: SupabaseManager
+    @StateObject private var vm = FriendProfileViewModel()
+    @StateObject private var followVM = UserRowViewModel()
     @State private var selectedTab = "Calendar"
     @State private var selectedDate = Date()
-    @StateObject private var vm = FriendProfileViewModel()
     @State private var showingFollowersList = false
     @State private var showingFollowingList = false
     @State private var showFullScreen = false
@@ -71,7 +72,6 @@ struct FriendProfileView: View {
                             .font(.title)
                             .fontWeight(.semibold)
                     }
-                    
                     HStack(spacing: 40) {
                         VStack {
                             Text("\(vm.followersCount)")
@@ -171,17 +171,74 @@ struct FriendProfileView: View {
                     Spacer()
                 }
                 .padding(.top, 10)
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        if let currentUserId = supabaseManager.profile?.id,
+                           currentUserId != user.id {
+
+                            Button {
+                                Task {
+                                    let previousState = followVM.isFollowing
+                                    followVM.isFollowing.toggle()
+
+                                    do {
+                                        await followVM.toggleFollow(
+                                            supabaseManager: supabaseManager,
+                                            currentUserId: currentUserId,
+                                            targetUserId: user.id
+                                        )
+
+                                        await vm.fetchFollowersCount(
+                                            supabaseManager: supabaseManager,
+                                            userId: user.id
+                                        )
+                                    }
+                                }
+                            } label: {
+                                Text(followVM.isFollowing ? "Following" : "Follow")
+                                    .font(.subheadline.bold())
+                                    .padding(.horizontal, 14)
+                                    .padding(.vertical, 6)
+                                    .background(
+                                        followVM.isFollowing
+                                        ? Color(.systemGray5)
+                                        : Color.blue
+                                    )
+                                    .foregroundColor(
+                                        followVM.isFollowing
+                                        ? .primary
+                                        : .white
+                                    )
+                                    .clipShape(Capsule())
+                                    .animation(.easeInOut, value: followVM.isFollowing)
+                            }
+                        }
+                    }
+                }
+
                 .task {
                     await vm.fetchFollowersCount(supabaseManager: supabaseManager, userId: user.id)
                     await vm.fetchFollowingCount(supabaseManager: supabaseManager, userId: user.id)
                     vm.daysInCurrentMonth()
-                    do{
+
+                    if let currentUserId = supabaseManager.profile?.id {
+                        await followVM.checkFollowStatus(
+                            supabaseManager: supabaseManager,
+                            currentUserId: currentUserId,
+                            targetUserId: user.id
+                        )
+                    }
+
+                    do {
                         let s = try await supabaseManager.fetchWorkoutStats(for: user.id)
-                        vm.stats = WorkoutStats(yearly_count: s.year, monthly_count: s.month, weekly_count: s.week)
+                        vm.stats = WorkoutStats(
+                            yearly_count: s.year,
+                            monthly_count: s.month,
+                            weekly_count: s.week
+                        )
                     } catch {
                         print("Error fetching friends stats")
                     }
-                    
                 }
             }
         }
