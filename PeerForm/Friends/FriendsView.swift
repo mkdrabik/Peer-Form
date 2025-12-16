@@ -22,10 +22,10 @@ struct FriendsView: View {
                 List(viewModel.filteredResults, id: \.id) { user in
                     UserRowView(
                         user: user,
-                        isFollowing: viewModel.followStatus[user.id] ?? false,
                         avatarURL: viewModel.avatarURLs[user.id]
                     )
                 }
+                .listStyle(PlainListStyle())
             }
         }
         .navigationTitle("Friends")

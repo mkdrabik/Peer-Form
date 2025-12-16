@@ -184,3 +184,8 @@ final class FriendProfileViewModel: ObservableObject {
     }
 
 }
+
+struct Follow: Codable {
+    let follower_id: UUID
+    let following_id: UUID
+}

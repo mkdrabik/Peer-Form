@@ -15,27 +15,9 @@ struct FollowersListView: View {
     var body: some View {
         NavigationView {
             List(users, id: \.id) { user in
-                HStack {
-                    KFImage(URL(string: user.avatar_url ?? ""))
-                        .placeholder {
-                            Image(systemName: "person.crop.circle.fill")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 40, height: 40)
-                                .foregroundColor(.gray)
-                        }
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: 40, height: 40)
-                        .clipShape(Circle())
-                    Text(user.username)
-                        .font(.body)
-                }
-                .background(
-                    NavigationLink("", destination: FriendProfileView( user: user, avatarURL: URL(string:user.avatar_url ?? "")))
-                                .opacity(0)
-                        )
+                UserRowView(user: user, avatarURL: URL(string: user.avatar_url ?? ""))
             }
+            .listStyle(PlainListStyle())
             .navigationTitle(title)
         }
     }
