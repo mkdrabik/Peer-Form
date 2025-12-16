@@ -20,7 +20,6 @@ struct FriendsPostCardView: View {
     @State private var likeCount: Int
     @State private var showHeart = false
     @State private var heartScale: CGFloat = 0.5
-
    
     
     init(post: Post, vm: ProfileViewModel, isLiked: Bool, likeCount: Int, avatarURL: URL, username: String) {

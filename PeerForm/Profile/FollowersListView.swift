@@ -10,6 +10,7 @@ import SwiftUI
 struct FollowersListView: View {
     let users: [Profile]
     let title: String
+    @State var isFollowing: Bool = false
 
     var body: some View {
         NavigationView {
@@ -31,7 +32,7 @@ struct FollowersListView: View {
                         .font(.body)
                 }
                 .background(
-                    NavigationLink("", destination: FriendProfileView(user: user, avatarURL: URL(string:user.avatar_url ?? "")))
+                    NavigationLink("", destination: FriendProfileView( user: user, avatarURL: URL(string:user.avatar_url ?? "")))
                                 .opacity(0)
                         )
             }

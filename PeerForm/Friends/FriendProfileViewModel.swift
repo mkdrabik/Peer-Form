@@ -17,6 +17,7 @@ final class FriendProfileViewModel: ObservableObject {
     @Published var followingCount = 0
     @Published var stats: WorkoutStats?
     @Published var days = 30
+    @Published var isFollowing = false
     
     func fetchFollowers(for userId: UUID, supabaseManager: SupabaseManager) async throws {
         do {
@@ -119,6 +120,67 @@ final class FriendProfileViewModel: ObservableObject {
             return
         }
         days = range.count
+    }
+    
+    func toggleFollow(
+        supabaseManager: SupabaseManager,
+        targetUserId: UUID,
+    ) async {
+        let currentUserId = supabaseManager.profile?.id
+        if isFollowing {
+            await unfollow(supabaseManager, currentUserId!, targetUserId)
+        } else {
+            await follow(supabaseManager, currentUserId!, targetUserId)
+        }
+        isFollowing.toggle()
+    }
+    
+    private func follow(
+            _ supabaseManager: SupabaseManager,
+            _ currentUserId: UUID,
+            _ targetUserId: UUID,
+        ) async {
+            try? await supabaseManager.client
+                .from("follows")
+                .insert([
+                    "follower_id": currentUserId,
+                    "following_id": targetUserId
+                ])
+                .execute()
+        }
+
+        private func unfollow(
+            _ supabaseManager: SupabaseManager,
+            _ currentUserId: UUID,
+            _ targetUserId: UUID
+        ) async {
+            try? await supabaseManager.client
+                .from("follows")
+                .delete()
+                .eq("follower_id", value: currentUserId)
+                .eq("following_id", value: targetUserId)
+                .execute()
+        }
+    
+    func fetchFollowStatus(
+        supabaseManager: SupabaseManager,
+        targetUserId: UUID
+    ) async {
+        print("called")
+        let currentUserId = supabaseManager.profile?.id
+        do {
+            let response: [Follow] = try await supabaseManager.client
+                .from("follows")
+                .select()
+                .eq("follower_id", value: currentUserId!.uuidString)
+                .eq("following_id", value: targetUserId.uuidString)
+                .execute()
+                .value
+            isFollowing = !response.isEmpty
+        print("follwoing \(isFollowing)")
+        } catch {
+            print(error)
+        }
     }
 
 }

@@ -10,7 +10,6 @@ import Supabase
 struct FriendProfileView: View {
     @EnvironmentObject var supabaseManager: SupabaseManager
     @StateObject private var vm = FriendProfileViewModel()
-    @StateObject private var followVM = UserRowViewModel()
     @State private var selectedTab = "Calendar"
     @State private var selectedDate = Date()
     @State private var showingFollowersList = false
@@ -19,7 +18,6 @@ struct FriendProfileView: View {
     
     let user: Profile
     let avatarURL: URL?
-    
     
     var body: some View {
             ScrollView {
@@ -178,14 +176,10 @@ struct FriendProfileView: View {
 
                             Button {
                                 Task {
-                                    let previousState = followVM.isFollowing
-                                    followVM.isFollowing.toggle()
-
                                     do {
-                                        await followVM.toggleFollow(
+                                        await vm.toggleFollow(
                                             supabaseManager: supabaseManager,
-                                            currentUserId: currentUserId,
-                                            targetUserId: user.id
+                                            targetUserId: user.id,
                                         )
 
                                         await vm.fetchFollowersCount(
@@ -195,39 +189,35 @@ struct FriendProfileView: View {
                                     }
                                 }
                             } label: {
-                                Text(followVM.isFollowing ? "Following" : "Follow")
+                                Text(vm.isFollowing ? "Following" : "Follow")
                                     .font(.subheadline.bold())
                                     .padding(.horizontal, 14)
                                     .padding(.vertical, 6)
                                     .background(
-                                        followVM.isFollowing
+                                        vm.isFollowing
                                         ? Color(.systemGray5)
                                         : Color.blue
                                     )
                                     .foregroundColor(
-                                        followVM.isFollowing
+                                        vm.isFollowing
                                         ? .primary
                                         : .white
                                     )
                                     .clipShape(Capsule())
-                                    .animation(.easeInOut, value: followVM.isFollowing)
+                                    .animation(.easeInOut, value: vm.isFollowing)
                             }
                         }
                     }
                 }
 
                 .task {
+                  await vm.fetchFollowStatus(
+                            supabaseManager: supabaseManager,
+                            targetUserId: user.id
+                        )
                     await vm.fetchFollowersCount(supabaseManager: supabaseManager, userId: user.id)
                     await vm.fetchFollowingCount(supabaseManager: supabaseManager, userId: user.id)
                     vm.daysInCurrentMonth()
-
-                    if let currentUserId = supabaseManager.profile?.id {
-                        await followVM.checkFollowStatus(
-                            supabaseManager: supabaseManager,
-                            currentUserId: currentUserId,
-                            targetUserId: user.id
-                        )
-                    }
 
                     do {
                         let s = try await supabaseManager.fetchWorkoutStats(for: user.id)
@@ -244,16 +234,17 @@ struct FriendProfileView: View {
         }
     }
 
-#Preview {
-    FriendProfileView(
-        user: Profile(
-            id: UUID(),
-            username: "mason",
-            first_name: "Mason",
-            last_name: "Drabik",
-            avatar_url: nil
-        ),
-        avatarURL: nil
-    )
-    .environmentObject(SupabaseManager.previewInstance)
-}
+//#Preview {
+//    FriendProfileView(
+//        isFollowing: .constant(false),
+//        user: Profile(
+//            id: UUID(),
+//            username: "mason",
+//            first_name: "Mason",
+//            last_name: "Drabik",
+//            avatar_url: nil
+//        ),
+//        avatarURL: nil,
+//    )
+//    .environmentObject(SupabaseManager.previewInstance)
+//}

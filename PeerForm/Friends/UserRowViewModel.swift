@@ -10,67 +10,54 @@ import Supabase
 
 @MainActor
 class UserRowViewModel: ObservableObject {
-    @Published var isFollowing: Bool = false
-    @Published var avatarURL: URL?
-    
-    
-    func toggleFollow(supabaseManager: SupabaseManager, currentUserId: UUID, targetUserId: UUID) async {
-           if isFollowing {
-               await unfollowUser(supabaseManager: supabaseManager, currentUserId: currentUserId, targetUserId: targetUserId)
-           } else {
-               await followUser(supabaseManager: supabaseManager, currentUserId: currentUserId, targetUserId: targetUserId)
-           }
-        await supabaseManager.fetchFollowingCount()
-       }
-    
-    func checkFollowStatus(supabaseManager: SupabaseManager, currentUserId: UUID, targetUserId: UUID) async {
-        do {
-            let response: [Follow] = try await supabaseManager.client
-                .from("follows")
-                .select()
-                .eq("follower_id", value: currentUserId.uuidString)
-                .eq("following_id", value: targetUserId.uuidString)
-                .execute()
-                .value
-            
-            isFollowing = !response.isEmpty
-        } catch {
-            print("Error checking follow status: \(error)")
-        }
+    @Published var isFollowing: Bool
+
+    init(isFollowing: Bool) {
+        self.isFollowing = isFollowing
     }
-    
-    func followUser(supabaseManager: SupabaseManager, currentUserId: UUID, targetUserId: UUID) async {
-        do {
-            try await supabaseManager.client.from("follows").insert([
-                "follower_id": currentUserId,
-                "following_id": targetUserId
-            ]).execute()
-            isFollowing = true
-        } catch {
-            print("Error following: \(error)")
+
+    func toggleFollow(
+        supabaseManager: SupabaseManager,
+        currentUserId: UUID,
+        targetUserId: UUID
+    ) async {
+        if isFollowing {
+            await unfollow(supabaseManager, currentUserId, targetUserId)
+        } else {
+            await follow(supabaseManager, currentUserId, targetUserId)
         }
     }
 
-    func unfollowUser(supabaseManager: SupabaseManager, currentUserId: UUID, targetUserId: UUID) async {
-        do {
-            try await supabaseManager.client.from("follows")
-                .delete()
-                .eq("follower_id", value: currentUserId)
-                .eq("following_id", value: targetUserId)
-                .execute()
-            isFollowing = false
-        } catch {
-            print("Error unfollowing: \(error)")
-        }
+    private func follow(
+        _ supabaseManager: SupabaseManager,
+        _ currentUserId: UUID,
+        _ targetUserId: UUID
+    ) async {
+        try? await supabaseManager.client
+            .from("follows")
+            .insert([
+                "follower_id": currentUserId,
+                "following_id": targetUserId
+            ])
+            .execute()
+        isFollowing = true
     }
-    func fetchOtherAvatarURL(supabaseManager: SupabaseManager, avatarURL: String) async throws {
-//        let signedUrlResponse = try await supabaseManager.client.storage
-//            .from("avatars")
-//            .createSignedURL(path: avatarURL, expiresIn: 60 * 60)
-        let signedUrlResponse = try supabaseManager.client.storage.from("avatars").getPublicURL(path: avatarURL)
-        self.avatarURL = signedUrlResponse
+
+    private func unfollow(
+        _ supabaseManager: SupabaseManager,
+        _ currentUserId: UUID,
+        _ targetUserId: UUID
+    ) async {
+        try? await supabaseManager.client
+            .from("follows")
+            .delete()
+            .eq("follower_id", value: currentUserId)
+            .eq("following_id", value: targetUserId)
+            .execute()
+        isFollowing = false
     }
 }
+
 struct Follow: Codable {
     let follower_id: UUID
     let following_id: UUID

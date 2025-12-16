@@ -162,7 +162,7 @@ private struct LeaderboardRowView: View {
                     if let user = selectedUser,
                        let avatarString = user.avatar_url,
                        let avatarURL = URL(string: avatarString) {
-                        FriendProfileView(user: user, avatarURL: avatarURL)
+                        FriendProfileView( user: user, avatarURL: avatarURL)
                     } else {
                         EmptyView()
                     }
