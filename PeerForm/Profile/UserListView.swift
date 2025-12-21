@@ -7,7 +7,7 @@
 import Kingfisher
 import SwiftUI
 
-struct FollowersListView: View {
+struct UserListView: View {
     let users: [Profile]
     let title: String
     @State var isFollowing: Bool = false

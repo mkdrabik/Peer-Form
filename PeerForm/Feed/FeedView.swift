@@ -33,6 +33,9 @@ struct FeedView: View {
             .task {
                 await vm.fetchPosts(supabaseManager: supabaseManager)
             }
+            . refreshable {
+                await vm.fetchPosts(supabaseManager: supabaseManager)
+            }
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     ZStack {

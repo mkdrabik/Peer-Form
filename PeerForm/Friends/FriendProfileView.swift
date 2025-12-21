@@ -99,12 +99,12 @@ struct FriendProfileView: View {
                     }
                     
                     NavigationLink(
-                        destination: FollowersListView(users: vm.followers, title: "Followers"),
+                        destination: UserListView(users: vm.followers, title: "Followers"),
                         isActive: $showingFollowersList
                     ) { EmptyView() }
                     
                     NavigationLink(
-                        destination: FollowersListView(users: vm.following, title: "Following"),
+                        destination: UserListView(users: vm.following, title: "Following"),
                         isActive: $showingFollowingList
                     ) { EmptyView() }
                     

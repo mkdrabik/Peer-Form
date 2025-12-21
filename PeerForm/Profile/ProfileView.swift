@@ -115,7 +115,7 @@ struct ProfileView: View {
                 ) { EmptyView() }
 
                 NavigationLink(
-                    destination: FollowersListView(users: followersVM.following, title: "Following"),
+                    destination: UserListView(users: followersVM.following, title: "Following"),
                     isActive: $showingFollowingList
                 ) { EmptyView() }
 
