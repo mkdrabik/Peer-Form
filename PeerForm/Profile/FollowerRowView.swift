@@ -16,52 +16,72 @@ struct FollowerRowView: View {
     @EnvironmentObject var supabaseManager: SupabaseManager
     @State private var showConfirmation = false
     @State private var isRemoving = false
+    @State private var showProfile = false
     
     var body: some View {
-        HStack {
-            if let avatarURL = avatarURL {
-                KFImage(avatarURL)
-                    .resizable()
-                    .scaledToFill()
-                    .frame(width: 40, height: 40)
-                    .clipShape(Circle())
-            } else {
-                Image(systemName: "person.crop.circle.fill")
-                    .resizable()
-                    .frame(width: 40, height: 40)
-                    .foregroundColor(.gray)
+        ZStack {
+            NavigationLink(
+                destination: FriendProfileView(
+                    user: user,
+                    avatarURL: avatarURL
+                ),
+                isActive: $showProfile
+            ) {
+                EmptyView()
             }
+            .hidden()
             
-            VStack(alignment: .leading) {
-                Text(user.username).bold()
-                Text("\(user.first_name) \(user.last_name)")
-                    .font(.footnote)
-                    .foregroundColor(.gray)
-            }
-            .padding(.leading, 8)
-            
-            Spacer()
-            Button {
-                showConfirmation = true
-            } label: {
-                Image(systemName: "xmark.circle.fill")
-                    .resizable()
-                    .frame(width: 24, height: 24)
-                    .foregroundColor(.red)
-            }
-            .disabled(isRemoving)
-            .alert("Remove Follower?", isPresented: $showConfirmation) {
-                Button("Cancel", role: .cancel) {}
-                Button("Remove", role: .destructive) {
-                    Task {
-                        await removeFollower()
-                    }
+            HStack {
+                if let avatarURL = avatarURL {
+                    KFImage(avatarURL)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: 40, height: 40)
+                        .clipShape(Circle())
+                } else {
+                    Image(systemName: "person.crop.circle.fill")
+                        .resizable()
+                        .frame(width: 40, height: 40)
+                        .foregroundColor(.gray)
                 }
-            } message: {
-                Text("Are you sure you want to remove this follower?")
+                
+                VStack(alignment: .leading) {
+                    Text(user.username).bold()
+                    Text("\(user.first_name) \(user.last_name)")
+                        .font(.footnote)
+                        .foregroundColor(.gray)
+                }
+                .padding(.leading, 8)
+                
+                Spacer()
+                
+                Button {
+                    showConfirmation = true
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .resizable()
+                        .frame(width: 24, height: 24)
+                        .foregroundColor(.red)
+                }
+                .buttonStyle(.borderless)
+                .disabled(isRemoving)
+            }
+            .contentShape(Rectangle())
+            .onTapGesture {
+                showProfile = true
             }
         }
         .padding(.vertical, 4)
+        .alert("Remove Follower?", isPresented: $showConfirmation) {
+            Button("Cancel", role: .cancel) {}
+            Button("Remove", role: .destructive) {
+                Task {
+                    await removeFollower()
+                }
+            }
+        } message: {
+            Text("Are you sure you want to remove this follower?")
+        }
     }
 
     private func removeFollower() async {
@@ -69,6 +89,7 @@ struct FollowerRowView: View {
             let currentUserId = supabaseManager.profile?.id,
             !isRemoving
         else { return }
+        
         isRemoving = true
 
         do {
@@ -78,6 +99,7 @@ struct FollowerRowView: View {
                 .eq("follower_id", value: user.id)
                 .eq("following_id", value: currentUserId)
                 .execute()
+            
             onRemoved()
         } catch {
             print("❌ Failed to remove follower:", error)
@@ -86,3 +108,4 @@ struct FollowerRowView: View {
         isRemoving = false
     }
 }
+

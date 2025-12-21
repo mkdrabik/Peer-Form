@@ -209,6 +209,28 @@ struct FriendProfileView: View {
                         }
                     }
                 }
+                .onChange(of: vm.isFollowing) {
+                    Task {
+                        await vm.fetchFollowStatus(
+                            supabaseManager: supabaseManager,
+                            targetUserId: user.id
+                        )
+                        await vm.fetchFollowersCount(supabaseManager: supabaseManager, userId: user.id)
+                        await vm.fetchFollowingCount(supabaseManager: supabaseManager, userId: user.id)
+                        vm.daysInCurrentMonth()
+
+                        do {
+                            let s = try await supabaseManager.fetchWorkoutStats(for: user.id)
+                            vm.stats = WorkoutStats(
+                                yearly_count: s.year,
+                                monthly_count: s.month,
+                                weekly_count: s.week
+                            )
+                        } catch {
+                            print("Error fetching friends stats")
+                        }
+                    }
+                }
 
                 .task {
                   await vm.fetchFollowStatus(
@@ -248,3 +270,4 @@ struct FriendProfileView: View {
 //    )
 //    .environmentObject(SupabaseManager.previewInstance)
 //}
+
