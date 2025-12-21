@@ -177,7 +177,6 @@ final class FriendProfileViewModel: ObservableObject {
                 .execute()
                 .value
             isFollowing = !response.isEmpty
-        print("follwoing \(isFollowing)")
         } catch {
             print(error)
         }
