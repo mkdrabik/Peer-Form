@@ -12,6 +12,7 @@ enum HomeTab {
     case camera
     case profile
     case friends
+    case groups
 }
 
 class HomeViewModel: ObservableObject {

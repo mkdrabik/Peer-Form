@@ -51,9 +51,8 @@ final class FeedViewModel: ObservableObject {
                     profiles ( id, username, avatar_url, first_name, last_name )
                 """)
                 .eq("type", value: "post")
-                .limit(20)
+                .limit(15)
                 .order("created_at", ascending: false)
-                .limit(20)
                 .execute()
 
             var fetchedPosts = try JSONDecoder().decode([Post].self, from: response.data)

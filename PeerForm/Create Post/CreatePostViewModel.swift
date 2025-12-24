@@ -156,7 +156,6 @@ final class CreatePostViewModel: ObservableObject {
             showAlert = true
 
             await supabaseManager.refreshWorkoutStats()
-
         } catch {
             isUploading = false
             print("❌ Upload error:", error)
@@ -170,5 +169,4 @@ struct PostInsert: Encodable {
     let caption: String
     let type: String
 }
-
 

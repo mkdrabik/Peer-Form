@@ -31,6 +31,14 @@ struct HomeView: View {
             .tag(HomeTab.friends)
             
             NavigationStack {
+                GroupsHomeView()
+            }
+            .tabItem {
+                Label("Groups", systemImage: "person.3.fill")
+            }
+            .tag(HomeTab.groups)
+            
+            NavigationStack {
                 CreatePostView()
             }
             .tabItem {

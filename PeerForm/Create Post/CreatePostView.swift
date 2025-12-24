@@ -90,6 +90,7 @@ struct CreatePostView: View {
                                 .shadow(radius: 4)
                             
                             Button {
+                                dismissKeyboard()
                                 withAnimation { viewModel.selectedImage = nil }
                             } label: {
                                 Image(systemName: "xmark.circle.fill")
